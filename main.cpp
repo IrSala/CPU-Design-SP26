@@ -14,7 +14,7 @@
  *   <output>.data.bin   — raw 16-bit big-endian data words (if any)
  */
 
-#include "assembler.h"
+#include "assembler/assembler.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -111,16 +111,11 @@ int main(int argc, char* argv[]) {
         std::cout << Assembler::disassembleAll(result.instructions);
     }
 
-    if (!outFile.empty()) {
-        if (!writeWords(outFile, result.instructions)) return 2;
-        std::cout << "Written " << result.instructions.size()
-                  << " instruction words to " << outFile << "\n";
-        if (!result.data.empty()) {
-            std::string df = outFile + ".data.bin";
-            if (!writeWords(df, result.data)) return 2;
-            std::cout << "Written " << result.data.size()
-                      << " data words to " << df << "\n";
-        }
+   if (!outFile.empty()) {
+    asmr.writeBinary(result, outFile);
+    std::cout << "Written to " << outFile
+              << " (" << result.instructions.size() << " instruction words, "
+              << result.data.size() << " data words)\n";
     }
 
     return 0;
