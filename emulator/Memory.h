@@ -38,6 +38,13 @@
  *   Every access validates the address and throws std::out_of_range with
  *   the bank name, operation, attempted address, and valid range.
  *
+ * MMIO
+ *   writeData and readData are virtual so subclasses (e.g. CapturingMemory
+ *   in tests) can intercept specific addresses such as MMIO_OUT (0x7F00)
+ *   without modifying the control unit or the Memory implementation.
+ *   The control unit handles MMIO printing directly in its STORE case;
+ *   it also calls memory_.writeData so that any subclass override fires.
+ *
  * Extensibility
  *   Memory-mapped I/O, ROM regions, access permissions, and separate loaders
  *   can be layered in without changing the public read/write API.
@@ -168,17 +175,16 @@ private:
     std::size_t   offsetBits_;
     std::size_t   indexBits_;
     std::size_t   tagBits_;
-    std::uint16_t offsetMask_;          // (1 << offsetBits) - 1
-    std::uint16_t indexMask_;           // (1 << indexBits)  - 1
+    std::uint16_t offsetMask_;
+    std::uint16_t indexMask_;
 
-    std::vector<CacheLine> lines_;      // layout: lines_[set * assoc + way]
+    std::vector<CacheLine> lines_;
     CacheStats  stats_;
     std::size_t accessCounter_ = 0;
 
     std::vector<std::uint16_t>* backingMem_;
     std::size_t backingWordCount_;
 
-    // Address decomposition helpers
     [[nodiscard]] std::uint16_t getTag(std::uint16_t address)    const;
     [[nodiscard]] std::size_t   getIndex(std::uint16_t address)  const;
     [[nodiscard]] std::size_t   getOffset(std::uint16_t address) const;
@@ -207,7 +213,9 @@ public:
     Memory(std::size_t instructionWordCount, std::size_t dataWordCount,
            const CacheConfig& iCacheConfig, const CacheConfig& dCacheConfig);
 
-    ~Memory();
+    // Virtual destructor — required since writeData/readData are virtual
+    // and tests subclass Memory (CapturingMemory).
+    virtual ~Memory();
 
     // Caches hold pointers to internal vectors — no copy / move.
     Memory(const Memory&)            = delete;
@@ -215,8 +223,7 @@ public:
     Memory(Memory&&)                 = delete;
     Memory& operator=(Memory&&)      = delete;
 
-    // ── Direct (uncached) access ───────────────────────────────────────
-    //    Bypass caches.  Useful for debugging, memory dumps, and loading.
+    // ── Direct (uncached) access ───────────────────────────────────────────
 
     /** Zero-fill both banks.  Resets caches if present. */
     void reset();
@@ -224,8 +231,10 @@ public:
     [[nodiscard]] std::uint16_t readInstruction(std::uint16_t address) const;
     void writeInstruction(std::uint16_t address, std::uint16_t value);
 
-    [[nodiscard]] std::uint16_t readData(std::uint16_t address) const;
-    void writeData(std::uint16_t address, std::uint16_t value);
+    // Virtual so subclasses (e.g. CapturingMemory in tests) can intercept
+    // specific addresses such as MMIO_OUT without modifying the control unit.
+    [[nodiscard]] virtual std::uint16_t readData(std::uint16_t address) const;
+    virtual void writeData(std::uint16_t address, std::uint16_t value);
 
     /** Load words into instruction memory at address 0.  Resets iCache. */
     void loadInstructionMemory(const std::vector<std::uint16_t>& words);
@@ -241,30 +250,20 @@ public:
     [[nodiscard]] std::size_t instructionWordCount() const noexcept;
     [[nodiscard]] std::size_t dataWordCount()        const noexcept;
 
-    // ── Cached access ──────────────────────────────────────────────────
-    //    Route through the cache layer.  Non-const because a read may
-    //    trigger a cache-line fill (modifying cache state).
-    //    Throws std::logic_error if no caches are configured.
+    // ── Cached access ──────────────────────────────────────────────────────
 
     [[nodiscard]] std::uint16_t cachedReadInstruction(std::uint16_t address);
     [[nodiscard]] std::uint16_t cachedReadData(std::uint16_t address);
     void cachedWriteData(std::uint16_t address, std::uint16_t value);
 
-    // ── Cache management ───────────────────────────────────────────────
+    // ── Cache management ───────────────────────────────────────────────────
 
-    /** True if caches were configured at construction time. */
     [[nodiscard]] bool hasCaches() const noexcept;
-
-    /** Invalidate all cache lines and reset stats. */
     void resetCaches();
-
-    /** Flush (write-back) all dirty cache lines to backing memory. */
     void flushCaches();
-
-    /** Reset cache hit/miss/read/write counters to zero. */
     void resetCacheStats();
 
-    // ── Cache statistics / debugging ───────────────────────────────────
+    // ── Cache statistics / debugging ───────────────────────────────────────
 
     [[nodiscard]] const CacheStats& instructionCacheStats() const;
     [[nodiscard]] const CacheStats& dataCacheStats()        const;

@@ -20,7 +20,7 @@ enum class ALUOp {
     SHR,    //logical shift right
     ASR,    //arithmetic shift right (preserves sign)
     MUL,    //a * b (truncated to 16 bits)
-    CMP,    //compare: sets flags but discards result
+    CMP,    //compare: sets flags based on (a - b), return value discarded by caller
     PASS_A  //pass a through unchanged (used for MOV)
 };
 
@@ -46,7 +46,10 @@ struct ALU {
                 result         = (uint16_t)result32;
                 flags.carry    = (b > a);  //borrow occurred
                 flags.overflow = (((a ^ b) & (a ^ result)) >> 15) & 1;
-                if (op == ALUOp::CMP) result = a;  //flags set, result discarded
+                // Note: for CMP the return value is ignored by the caller
+                // (control_unit.cpp does (void)alu_.execute(...)).
+                // result stays as (a - b) so the zero/negative flag update
+                // below correctly reflects the comparison.
                 break;
 
             case ALUOp::AND:   result = a & b;               break;
