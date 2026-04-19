@@ -37,7 +37,7 @@ start:
     MOVI  R5, 0x7F
     MOVI  R6, 8
     SHL   R5, R5, R6          ; R5 = 0x7F00
-
+    ADDI  R5, 1               ; R5 = 0x7F01 (integer MMIO)
     ; Initialise Fibonacci sequence
     MOVI  R1, 0               ; a = 0  (fib[0])
     MOVI  R2, 1               ; b = 1  (fib[1])
@@ -62,4 +62,4 @@ loop:
     JMP   loop
 
 done:
-    NOP                       ; end of program
+    JMP done                       ; end of program

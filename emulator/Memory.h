@@ -203,6 +203,10 @@ private:
 
 class Memory {
 public:
+    // ── MMIO addresses ────────────────────────────────────────────────────
+    static constexpr std::uint16_t MMIO_OUT_CHAR = 0x7F00;
+    static constexpr std::uint16_t MMIO_OUT_INT  = 0x7F01;
+
     /** Construct backing memory only (no caches). */
     Memory(std::size_t instructionWordCount, std::size_t dataWordCount);
 
@@ -222,6 +226,8 @@ public:
     Memory& operator=(const Memory&) = delete;
     Memory(Memory&&)                 = delete;
     Memory& operator=(Memory&&)      = delete;
+    
+    
 
     // ── Direct (uncached) access ───────────────────────────────────────────
 

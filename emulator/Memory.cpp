@@ -538,6 +538,8 @@ std::uint16_t Memory::readData(std::uint16_t address) const {
 }
 
 void Memory::writeData(std::uint16_t address, std::uint16_t value) {
+    if (address == MMIO_OUT_CHAR) return;  // MMIO char — handled by control unit
+    if (address == MMIO_OUT_INT)  return;  // MMIO int  — handled by control unit
     throwIfDataOutOfRange(*this, address, "write");
     dataMem_[address] = value;
 }

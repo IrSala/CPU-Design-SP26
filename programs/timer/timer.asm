@@ -34,7 +34,7 @@ start:
     MOVI  R2, 0x7F            ; FETCH: get MOVI; COMPUTE: imm=0x7F; STORE: R2=0x7F
     MOVI  R6, 8               ; FETCH: get MOVI; COMPUTE: imm=8;    STORE: R6=8
     SHL   R2, R2, R6          ; FETCH: get SHL;  COMPUTE: 0x7F<<8;  STORE: R2=0x7F00
-
+    ADDI  R2, 1               ; R2 = 0x7F01 (integer MMIO)
     MOVI  R1, 20              ; FETCH: get MOVI; COMPUTE: imm=20;   STORE: R1=20
 
 ; ── Countdown loop ──────────────────────────────────────────────────────────

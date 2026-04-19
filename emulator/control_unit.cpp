@@ -126,27 +126,16 @@ void ControlUnit::execute(const DecodedInstruction& instr) {
             writeReg(instr.rd, out);
             break;
         }
-        case Opcode::STORE: {
+       case Opcode::STORE: {
             const std::uint16_t addr  = regs_.getGeneralReg(instr.rd);
             const std::uint16_t value = regs_.getGeneralReg(instr.rs1);
-
-            if (addr == MMIO_OUT) {
-                // Memory-mapped console output.
-                // Printable ASCII → emit as character; otherwise as decimal.
-                if ((value >= 0x20 && value <= 0x7E) ||
-                     value == '\n' || value == '\r' || value == '\t') {
-                    std::cout << static_cast<char>(value);
-                } else {
-                    std::cout << static_cast<unsigned>(value) << '\n';
-                }
-                // Also call memory_.writeData so that subclasses such as
-                // CapturingMemory (used in tests) can intercept MMIO writes
-                // and record the value without needing to parse stdout.
-                memory_.writeData(addr, value);
+            if (addr == Memory::MMIO_OUT_CHAR) {
+                std::cout << static_cast<char>(value);
+            } else if (addr == Memory::MMIO_OUT_INT) {
+                std::cout << static_cast<unsigned>(value) << '\n';
             } else {
                 memory_.writeData(addr, value);
             }
-
             (void)alu_.execute(value, 0, ALUOp::PASS_A);
             break;
         }

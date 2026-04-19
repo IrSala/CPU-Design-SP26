@@ -6,8 +6,8 @@
  */
 
 #include "assembler.h"
-#include "isa.h"
-
+#include "../isa/isa.h"
+#include <fstream>
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -74,6 +74,29 @@ void Assembler::reset() {
     errors_.clear();
     warnings_.clear();
 }
+
+void Assembler::writeBinary(const AssemblerResult& result, const std::string& path) {
+    std::ofstream f(path, std::ios::binary);
+    if (!f) throw std::runtime_error("Cannot open output file: " + path);
+
+    uint16_t instrCount = static_cast<uint16_t>(result.instructions.size());
+    uint16_t dataCount  = static_cast<uint16_t>(result.data.size());
+
+    // Write header: [instrCount][dataCount]
+    f.put((instrCount >> 8) & 0xFF);  f.put(instrCount & 0xFF);
+    f.put((dataCount  >> 8) & 0xFF);  f.put(dataCount  & 0xFF);
+
+    // Write instruction words
+    for (uint16_t w : result.instructions) {
+        f.put((w >> 8) & 0xFF);  f.put(w & 0xFF);
+    }
+
+    // Write data words
+    for (uint16_t w : result.data) {
+        f.put((w >> 8) & 0xFF);  f.put(w & 0xFF);
+    }
+}
+
 
 // ════════════════════════════════════════════════════════════════════════════
 //  Error / warning helpers
