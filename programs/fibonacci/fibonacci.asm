@@ -32,7 +32,7 @@
 .text
 
 start:
-    ; Set up MMIO address R5 = 0x7F00
+    ; Set up MMIO address R5 = 0x7F01
     ; MOVI can only load 8 bits, so: R5 = 0x7F, then SHL R5 by 8
     MOVI  R5, 0x7F
     MOVI  R6, 8
@@ -49,7 +49,7 @@ loop:
     BEQ   done
 
     ; Output current value of 'a' to MMIO console
-    STORE R5, R1              ; Mem[0x7F00] = R1
+    STORE R5, R1              ; Mem[0x7F01] = R1
 
     ; Advance: a, b = b, a+b
     ADD   R3, R1, R2          ; R3 = a + b
