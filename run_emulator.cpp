@@ -8,10 +8,17 @@
 #include "alu.h"
 #include "Memory.h"
 #include "control_unit.h"
+
 //
-//To run Binary file -  
-//g++ -std=c++17 -Wall -Wextra     -I./isa -I./emulator     run_emulator.cpp emulator/*.cpp     -o program
-//./program binary file to execute the program
+// run_emulator.cpp — Binary loader and executor for the 16-bit Harvard CPU
+//
+// To compile:
+//   g++ -std=c++17 -Wall -Wextra -I./isa -I./emulator
+//       run_emulator.cpp emulator/*.cpp -o program
+//
+// To run:
+//   ./program <file.bin>          — execute program, show output only
+//   ./program <file.bin> --dump   — execute program, then dump memory
 //
 
 int main(int argc, char* argv[]) {
@@ -20,15 +27,21 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // ── Open binary file ─────────────────────────────────────────────────
     std::ifstream f(argv[1], std::ios::binary);
     if (!f) { std::cerr << "Cannot open: " << argv[1] << "\n"; return 1; }
 
     // Read header
+    // The binary format starts with a 4-byte header:
+    // [2 bytes: instruction word count][2 bytes: data word count]
+    // This tells the loader how many words to read for each memory bank.
     uint16_t instrCount = 0, dataCount = 0;
     instrCount = (f.get() << 8) | f.get();
     dataCount  = (f.get() << 8) | f.get();
 
     // Read instruction words
+    // Instructions are stored big-endian (high byte first).
+    // These will be loaded into the CPU's instruction memory bank.
     std::vector<uint16_t> instrs;
     for (uint16_t i = 0; i < instrCount; ++i) {
         int hi = f.get(), lo = f.get();
@@ -36,31 +49,49 @@ int main(int argc, char* argv[]) {
     }
 
     // Read data words
+    // Data words follow the instructions in the binary file.
+    // These will be loaded into the CPU's data memory bank.
     std::vector<uint16_t> data;
     for (uint16_t i = 0; i < dataCount; ++i) {
         int hi = f.get(), lo = f.get();
         data.push_back((static_cast<uint16_t>(hi) << 8) | lo);
     }
 
+     // ── Initialise CPU components ────────────────────────────────────────
+    // Harvard architecture: separate instruction and data memory banks
     Registers regs;
     ALU alu;
     Memory mem(256, 256);
     ControlUnit cpu(regs, alu, mem);
 
-    // Load both sections into correct memory banks
+    // Write each instruction word into the instruction bank starting at
+    // address 0. The CPU fetches from here during execution.
     for (std::size_t i = 0; i < instrs.size(); ++i)
         mem.writeInstruction(static_cast<uint16_t>(i), instrs[i]);
 
+    // Write data words into the data bank starting at address 0.
+    // LOAD/STORE instructions access this bank during execution.
     for (std::size_t i = 0; i < data.size(); ++i)
         mem.writeData(static_cast<uint16_t>(i), data[i]);
 
+    // Ensure PC = 0 and all general-purpose registers are cleared before execution begins.
     regs.reset();
 
+    // Step the CPU one instruction at a time (Fetch → Decode → Execute).
+    // Stop when the PC runs past the loaded program or after 1000 cycles
     for (int i = 0; i < 1000; ++i) {
         if (regs.getprogramcountRegister() >= instrs.size()) break;
         cpu.step();
     }
 
+    //print the contents of both memory banks after execution.
+    std::cout << "\n--- Instruction Memory ---\n";
+    mem.dumpInstructionMemory(0, instrs.size());
+
+    if (!data.empty()) {
+        std::cout << "\n--- Data Memory ---\n";
+        mem.dumpDataMemory(0, data.size());
+    }
     std::cout << std::flush;
     return 0;
 }
