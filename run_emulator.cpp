@@ -18,7 +18,6 @@
 //
 // To run:
 //   ./program <file.bin>          — execute program, show output only
-//   ./program <file.bin> --dump   — execute program, then dump memory
 //
 
 int main(int argc, char* argv[]) {
