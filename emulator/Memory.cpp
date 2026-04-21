@@ -400,7 +400,7 @@ void Cache::dump(std::ostream& out) const {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-//  Memory — error helpers (unchanged from original)
+//  Memory — error helpers
 // ════════════════════════════════════════════════════════════════════════════
 
 std::string Memory::formatOutOfRangeMessage(const char* memoryKind,
@@ -572,9 +572,14 @@ void Memory::loadDataMemory(const std::vector<std::uint16_t>& words) {
     if (dCache_) dCache_->reset();
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+//  Memory — dump (with optional decoder annotations)
+// ════════════════════════════════════════════════════════════════════════════
+
 void Memory::dumpInstructionMemory(std::uint16_t startAddress,
                                    std::size_t length,
-                                   std::ostream& out) const {
+                                   std::ostream& out,
+                                   InstructionDecoder decoder) const {
     throwIfDumpOutOfRange(instructionMem_.size(), startAddress,
                           length, "instruction memory");
 
@@ -596,15 +601,18 @@ void Memory::dumpInstructionMemory(std::uint16_t startAddress,
         const auto addr = static_cast<std::uint16_t>(startAddress + i);
         out << "  0x" << std::setw(4) << std::setfill('0')
             << static_cast<unsigned>(addr) << ": 0x"
-            << std::setw(4) << static_cast<unsigned>(instructionMem_[addr])
-            << '\n';
+            << std::setw(4) << static_cast<unsigned>(instructionMem_[addr]);
+        if (decoder)
+            out << "  ; " << decoder(instructionMem_[addr]);
+        out << '\n';
     }
     out.flags(old);
 }
 
 void Memory::dumpDataMemory(std::uint16_t startAddress,
                             std::size_t length,
-                            std::ostream& out) const {
+                            std::ostream& out,
+                            DataDecoder decoder) const {
     throwIfDumpOutOfRange(dataMem_.size(), startAddress,
                           length, "data memory");
 
@@ -626,8 +634,10 @@ void Memory::dumpDataMemory(std::uint16_t startAddress,
         const auto addr = static_cast<std::uint16_t>(startAddress + i);
         out << "  0x" << std::setw(4) << std::setfill('0')
             << static_cast<unsigned>(addr) << ": 0x"
-            << std::setw(4) << static_cast<unsigned>(dataMem_[addr])
-            << '\n';
+            << std::setw(4) << static_cast<unsigned>(dataMem_[addr]);
+        if (decoder)
+            out << "  ; " << decoder(dataMem_[addr]);
+        out << '\n';
     }
     out.flags(old);
 }

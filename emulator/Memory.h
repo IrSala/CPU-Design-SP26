@@ -56,7 +56,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+#include <functional>
 // ════════════════════════════════════════════════════════════════════════════
 //  Cache helper types
 // ════════════════════════════════════════════════════════════════════════════
@@ -203,6 +203,9 @@ private:
 
 class Memory {
 public:
+
+    using InstructionDecoder = std::function<std::string(std::uint16_t word)>;
+    using DataDecoder        = std::function<std::string(std::uint16_t word)>;
     // ── MMIO addresses ────────────────────────────────────────────────────
     static constexpr std::uint16_t MMIO_OUT_CHAR = 0x7F00;
     static constexpr std::uint16_t MMIO_OUT_INT  = 0x7F01;
@@ -248,10 +251,14 @@ public:
     /** Load words into data memory at address 0.  Resets dCache. */
     void loadDataMemory(const std::vector<std::uint16_t>& words);
 
-    void dumpInstructionMemory(std::uint16_t startAddress, std::size_t length,
-                               std::ostream& out = std::cout) const;
-    void dumpDataMemory(std::uint16_t startAddress, std::size_t length,
-                        std::ostream& out = std::cout) const;
+    void dumpInstructionMemory(std::uint16_t startAddress,
+                           std::size_t length,
+                           std::ostream& out,
+                           InstructionDecoder decoder = nullptr) const;
+    void dumpDataMemory(std::uint16_t startAddress,
+                    std::size_t length,
+                    std::ostream& out,
+                    DataDecoder decoder = nullptr) const;
 
     [[nodiscard]] std::size_t instructionWordCount() const noexcept;
     [[nodiscard]] std::size_t dataWordCount()        const noexcept;

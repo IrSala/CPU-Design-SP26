@@ -20,6 +20,51 @@
 //   ./program <file.bin>          — execute program, show output only
 //
 
+#include "isa/isa.h"  // adjust path if needed
+
+static std::string disassemble(std::uint16_t word) {
+    const Opcode op = decodeOpcode(word);
+    const uint8_t rd  = decodeRd(word);
+    const uint8_t rs1 = decodeRs1(word);
+    const uint8_t rs2 = decodeRs2(word);
+
+    auto reg = [](uint8_t r) { return "R" + std::to_string(r); };
+
+    switch (op) {
+        // R-type
+        case Opcode::ADD:  return "ADD  " + reg(rd) + ", " + reg(rs1) + ", " + reg(rs2);
+        case Opcode::SUB:  return "SUB  " + reg(rd) + ", " + reg(rs1) + ", " + reg(rs2);
+        case Opcode::AND:  return "AND  " + reg(rd) + ", " + reg(rs1) + ", " + reg(rs2);
+        case Opcode::OR:   return "OR   " + reg(rd) + ", " + reg(rs1) + ", " + reg(rs2);
+        case Opcode::MUL:  return "MUL  " + reg(rd) + ", " + reg(rs1) + ", " + reg(rs2);
+        case Opcode::SHL:  return "SHL  " + reg(rd) + ", " + reg(rs1) + ", " + reg(rs2);
+        case Opcode::SHR:  return "SHR  " + reg(rd) + ", " + reg(rs1) + ", " + reg(rs2);
+        case Opcode::CMP:  return "CMP  " + reg(rs1) + ", " + reg(rs2);
+
+        // Memory
+        case Opcode::LOAD:  return "LOAD  " + reg(rd) + ", [" + reg(rs1) + "]";
+        case Opcode::STORE: return "STORE [" + reg(rs1) + "], " + reg(rs2);
+
+        // Immediate
+        case Opcode::MOVI: return "MOVI " + reg(rd) + ", " + std::to_string(word & 0xFF);
+        case Opcode::ADDI: return "ADDI " + reg(rd) + ", " + std::to_string(decodeImm8(word));
+
+        // Jumps
+        case Opcode::JMP: return "JMP  " + std::to_string(decodeImm12(word));
+        case Opcode::JAL: return "JAL  " + std::to_string(decodeImm12(word));
+        case Opcode::JR:  return "JR   " + reg(rd);
+
+        // Branch
+        case Opcode::BRANCH:
+            if (isBNE(word))
+                return "BNE  " + std::to_string(decodeBranchOffset(word));
+            else
+                return "BEQ  " + std::to_string(decodeBranchOffset(word));
+
+        default: return "???";
+    }
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: ./program <file.bin>\n";
@@ -85,12 +130,19 @@ int main(int argc, char* argv[]) {
 
     //print the contents of both memory banks after execution.
     std::cout << "\n--- Instruction Memory ---\n";
-    mem.dumpInstructionMemory(0, instrs.size());
+    mem.dumpInstructionMemory(0, instrs.size(), std::cout, [](std::uint16_t word) { return disassemble(word); });
 
     if (!data.empty()) {
-        std::cout << "\n--- Data Memory ---\n";
-        mem.dumpDataMemory(0, data.size());
-    }
+    std::cout << "\n--- Data Memory ---\n";
+    mem.dumpDataMemory(0, data.size(), std::cout,
+        [](std::uint16_t word) -> std::string {
+            if (word == 0x0000) return "NULL";
+            const char c = static_cast<char>(word & 0xFF);
+            if (std::isprint(static_cast<unsigned char>(c)))
+                return std::string("'") + c + "'";
+            return "non-printable";
+        });
+}
     std::cout << std::flush;
     return 0;
 }
