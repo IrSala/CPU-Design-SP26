@@ -65,7 +65,7 @@ public:
     static std::string disassemble   (uint16_t word, uint16_t pc = 0);
     static std::string disassembleAll(const std::vector<uint16_t>& words,
                                       uint16_t startPC = 0);
-
+    void writeBinary(const AssemblerResult& result, const std::string& path);
 private:
     struct Token {
         enum class Kind { Mnemonic, Register, Immediate, LabelRef, String, Directive };

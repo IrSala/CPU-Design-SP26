@@ -32,12 +32,12 @@
 .text
 
 start:
-    ; Set up MMIO address R5 = 0x7F00
+    ; Set up MMIO address R5 = 0x7F01
     ; MOVI can only load 8 bits, so: R5 = 0x7F, then SHL R5 by 8
     MOVI  R5, 0x7F
     MOVI  R6, 8
     SHL   R5, R5, R6          ; R5 = 0x7F00
-
+    ADDI  R5, 1               ; R5 = 0x7F01 (integer MMIO)
     ; Initialise Fibonacci sequence
     MOVI  R1, 0               ; a = 0  (fib[0])
     MOVI  R2, 1               ; b = 1  (fib[1])
@@ -49,7 +49,7 @@ loop:
     BEQ   done
 
     ; Output current value of 'a' to MMIO console
-    STORE R5, R1              ; Mem[0x7F00] = R1
+    STORE R5, R1              ; Mem[0x7F01] = R1
 
     ; Advance: a, b = b, a+b
     ADD   R3, R1, R2          ; R3 = a + b
@@ -62,4 +62,4 @@ loop:
     JMP   loop
 
 done:
-    NOP                       ; end of program
+    JMP done                       ; end of program

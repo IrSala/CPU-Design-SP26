@@ -1,4 +1,5 @@
 #include "control_unit.h"
+#include <iostream>
 #include <stdexcept>
 
 DecodedInstruction InstructionDecoder::decode(std::uint16_t rawInstruction) const {
@@ -119,17 +120,22 @@ void ControlUnit::execute(const DecodedInstruction& instr) {
             break;
         }
         case Opcode::LOAD: {
-            const std::uint16_t addr = regs_.getGeneralReg(instr.rs1);
+            const std::uint16_t addr  = regs_.getGeneralReg(instr.rs1);
             const std::uint16_t value = memory_.readData(addr);
-            const std::uint16_t out = alu_.execute(value, 0, ALUOp::PASS_A);
+            const std::uint16_t out   = alu_.execute(value, 0, ALUOp::PASS_A);
             writeReg(instr.rd, out);
             break;
         }
-        case Opcode::STORE: {
-            // STORE encoding uses rd as address-register and rs1 as data-register.
-            const std::uint16_t addr = regs_.getGeneralReg(instr.rd);
+       case Opcode::STORE: {
+            const std::uint16_t addr  = regs_.getGeneralReg(instr.rd);
             const std::uint16_t value = regs_.getGeneralReg(instr.rs1);
-            memory_.writeData(addr, value);
+            if (addr == Memory::MMIO_OUT_CHAR) {
+                std::cout << static_cast<char>(value);
+            } else if (addr == Memory::MMIO_OUT_INT) {
+                std::cout << static_cast<unsigned>(value) << '\n';
+            } else {
+                memory_.writeData(addr, value);
+            }
             (void)alu_.execute(value, 0, ALUOp::PASS_A);
             break;
         }

@@ -22,7 +22,7 @@
 ;
 ; Registers:
 ;   R1  countdown value  (20 → 0)
-;   R2  MMIO output address (0x7F00)
+;   R2  MMIO integer output address (0x7F01)
 ;   R6  scratch for shift amount
 ; ═══════════════════════════════════════════════════════════════════
 
@@ -30,11 +30,11 @@
 
 ; ── Initialisation ──────────────────────────────────────────────────────────
 start:
-    ; Build MMIO address 0x7F00 in R2
+    ; Build MMIO address 0x7F01 in R2
     MOVI  R2, 0x7F            ; FETCH: get MOVI; COMPUTE: imm=0x7F; STORE: R2=0x7F
     MOVI  R6, 8               ; FETCH: get MOVI; COMPUTE: imm=8;    STORE: R6=8
     SHL   R2, R2, R6          ; FETCH: get SHL;  COMPUTE: 0x7F<<8;  STORE: R2=0x7F00
-
+    ADDI  R2, 1               ; R2 = 0x7F01 (integer MMIO)
     MOVI  R1, 20              ; FETCH: get MOVI; COMPUTE: imm=20;   STORE: R1=20
 
 ; ── Countdown loop ──────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ count_loop:
     ; Cycle C — output current count
     ; FETCH:   load STORE into IR
     ; COMPUTE: address bus ← R2 (0x7F00), data bus ← R1
-    ; STORE:   data_mem[0x7F00] = R1  (MMIO console receives R1)
+    ; STORE:   data_mem[0x7F01] = R1  (MMIO console receives R1)
     STORE R2, R1
 
     ; Cycle D — decrement counter
@@ -72,5 +72,5 @@ count_loop:
 ; ── Done ────────────────────────────────────────────────────────────────────
 done:
     ; Output 0 to signal completion
-    STORE R2, R0              ; Mem[0x7F00] = 0
+    STORE R2, R0              ; Mem[0x7F01] = 0
     NOP
