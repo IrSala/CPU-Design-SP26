@@ -30,7 +30,7 @@ static bool readFile(const std::string& path, std::string& out) {
     return true;
 }
 
-static bool writeWords(const std::string& path, const std::vector<uint16_t>& words) {
+/*static bool writeWords(const std::string& path, const std::vector<uint16_t>& words) {
     std::ofstream f(path, std::ios::binary);
     if (!f) { std::cerr << "Cannot write: " << path << "\n"; return false; }
     for (uint16_t w : words) {
@@ -38,7 +38,7 @@ static bool writeWords(const std::string& path, const std::vector<uint16_t>& wor
         f.put(static_cast<char>(w & 0xFF));
     }
     return true;
-}
+}*/
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

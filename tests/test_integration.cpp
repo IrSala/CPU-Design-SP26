@@ -19,8 +19,9 @@
  *   ./tests/test_integration
  */
 
-#include "assembler.h"
-#include "isa.h"
+#include "assembler/assembler.h"
+
+#include "isa/isa.h"
 #include "Memory.h"
 
 #include <cstdint>

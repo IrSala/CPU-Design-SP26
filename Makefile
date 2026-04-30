@@ -1,9 +1,9 @@
 CXX      := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -O2
 
-TARGET  := assembler
-SRCS    := main.cpp assembler.cpp
-HEADERS := assembler.h isa.h
+TARGET  := assembler_bin
+SRCS    := main.cpp assembler/assembler.cpp
+HEADERS := assembler/assembler.h isa/isa.h
 
 all: $(TARGET)
 
