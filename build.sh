@@ -117,13 +117,13 @@ fi
 
 if [[ $run_demos -eq 1 ]]; then
     step "Run timer.bin (countdown 20 -> 0)"
-    ./run_emulator timer.bin | sed -n '1,22p'
+    ./run_emulator timer.bin 
     step "Run hello.bin"
-    ./run_emulator hello.bin | sed -n '1,2p'
+    ./run_emulator hello.bin 
     step "Run fib.bin (first 10 Fibonacci numbers)"
-    ./run_emulator fib.bin | sed -n '1,11p'
-    step "Run factorial.bin (5! = 120 = ASCII 'x')"
-    ./run_emulator factorial.bin | sed -n '1,2p'
+    ./run_emulator fib.bin 
+    step "Run factorial.bin (5! = 120)"
+    ./run_emulator factorial.bin 
 fi
 
 # ---------------------------------------------------------------------------
@@ -139,7 +139,7 @@ echo "Try:"
 echo "  ./run_emulator timer.bin       # countdown 20 -> 0"
 echo "  ./run_emulator hello.bin       # Hello, World!"
 echo "  ./run_emulator fib.bin         # first 10 Fibonacci numbers"
-echo "  ./run_emulator factorial.bin   # 5! = 120 (printed as 'x')"
+echo "  ./run_emulator factorial.bin   # 5! = 120"
 echo
 echo "Run all tests:  ./build.sh --run-tests"
 echo "Run all demos:  ./build.sh --run-demos"

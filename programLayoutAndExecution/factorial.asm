@@ -35,7 +35,7 @@ main:
     MOVI  R3, 0x7F
     MOVI  R6, 8
     SHL   R3, R3, R6          ; R3 = 0x7F00
-
+    ADDI  R3, 1 ;R3 = 0x7F01
     ; Call factorial(5)
     MOVI  R1, 5               ; argument n = 5
     JAL   factorial            ; R14 = return addr; jump to factorial
