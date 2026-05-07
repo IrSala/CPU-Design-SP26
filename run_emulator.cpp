@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     // Harvard architecture: separate instruction and data memory banks
     Registers regs;
     ALU alu;
-    Memory mem(256, 256);
+    Memory mem(256, 65536); // 64K data memory so stack at 0xFFFE is reachable
     ControlUnit cpu(regs, alu, mem);
 
     // Write each instruction word into the instruction bank starting at
