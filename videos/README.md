@@ -1,4 +1,7 @@
 # Videos
 
 ## CPU Design Video
-[Watch the demo](https://youtu.be/xB7I36wSh10)
+[Watch here](https://youtu.be/xB7I36wSh10)
+
+## Program Layout & Execution Video
+[Watch here](https://youtu.be/2dyR0Rr--nA)
