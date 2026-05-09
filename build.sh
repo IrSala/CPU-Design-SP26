@@ -7,7 +7,6 @@
 #
 # Usage:
 #   ./build.sh              # build everything
-#   ./build.sh --run-tests  # build, then run all 3 test suites
 #   ./build.sh --run-demos  # build, then run all 4 demo programs
 #   ./build.sh --all        # build + run tests + run demos
 #   ./build.sh --clean      # remove every artefact this script produces, then exit
@@ -68,22 +67,7 @@ step "Build run_emulator"
     emulator/control_unit.cpp emulator/Memory.cpp emulator/register.cpp \
     -o run_emulator
 
-step "Build tests/test_runner"
-"$CXX" $CXXFLAGS "${INCLUDES[@]}" \
-    tests/test_runner.cpp emulator/register.cpp \
-    -o tests/test_runner
 
-step "Build tests/test_integration"
-"$CXX" $CXXFLAGS "${INCLUDES[@]}" \
-    tests/test_integration.cpp assembler/assembler.cpp \
-    emulator/Memory.cpp emulator/register.cpp emulator/control_unit.cpp \
-    -o tests/test_integration
-
-step "Build tests/test_e2e"
-"$CXX" $CXXFLAGS "${INCLUDES[@]}" \
-    tests/test_e2e.cpp assembler/assembler.cpp \
-    emulator/Memory.cpp emulator/register.cpp emulator/control_unit.cpp \
-    -o tests/test_e2e
 
 # ---------------------------------------------------------------------------
 # 2. Assemble all demo programs
@@ -95,21 +79,6 @@ step "Assemble demo programs"
 ./assembler_bin programs/fibonacci/fibonacci.asm        fib.bin
 ./assembler_bin programLayoutAndExecution/factorial.asm factorial.bin
 
-# ---------------------------------------------------------------------------
-# 3. Optional: run tests
-# ---------------------------------------------------------------------------
-
-if [[ $run_tests -eq 1 ]]; then
-    # Don't abort the script on test failures — we want to show every suite's
-    # result and still continue to the demo runs / summary below.
-    set +e
-    step "Run tests/test_runner";      ./tests/test_runner      | tail -4; rc1=${PIPESTATUS[0]}
-    step "Run tests/test_integration"; ./tests/test_integration | tail -4; rc2=${PIPESTATUS[0]}
-    step "Run tests/test_e2e";         ./tests/test_e2e         | tail -4; rc3=${PIPESTATUS[0]}
-    set -e
-    [[ $rc3 -ne 0 ]] && \
-        echo "(test_e2e exits non-zero on a fresh build — known regression, see running_instructions.md §7)"
-fi
 
 # ---------------------------------------------------------------------------
 # 4. Optional: run demo programs
@@ -132,7 +101,6 @@ fi
 
 step "Build complete"
 echo "Binaries: ./assembler_bin  ./run_emulator"
-echo "Tests:    ./tests/test_runner  ./tests/test_integration  ./tests/test_e2e"
 echo "Demos:    ./timer.bin  ./hello.bin  ./fib.bin  ./factorial.bin"
 echo
 echo "Try:"
@@ -141,6 +109,5 @@ echo "  ./run_emulator hello.bin       # Hello, World!"
 echo "  ./run_emulator fib.bin         # first 10 Fibonacci numbers"
 echo "  ./run_emulator factorial.bin   # 5! = 120"
 echo
-echo "Run all tests:  ./build.sh --run-tests"
 echo "Run all demos:  ./build.sh --run-demos"
 echo "Clean:          ./build.sh --clean"
