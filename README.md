@@ -10,7 +10,7 @@ Everything is plain C++17. No external dependencies. Builds and runs on macOS
 
 # Running instructions — 16-bit Harvard CPU project
 
-Everything you need to **build, run and test** the project. For the project
+Everything you need to **build and run ** the project. For the project
 description, CPU schematic, ISA reference and walk-throughs see `README.md`.
 
 The flow is always:
@@ -28,8 +28,7 @@ The flow is always:
 * No external libraries.
 
 The repository ships with prebuilt arm64 executables (`assembler_bin`,
-`run_emulator`, `tests/test_runner`, `tests/test_integration`,
-`tests/test_e2e`), so on macOS arm64 you can skip straight to §3.
+`run_emulator`), so on macOS arm64 you can skip straight to §3.
 
 ---
 
@@ -38,13 +37,12 @@ The repository ships with prebuilt arm64 executables (`assembler_bin`,
 ### 2.1 One-command build (recommended)
 
 A `build.sh` script at the project root compiles every binary, assembles
-every demo program, and (optionally) runs the tests and the demos for you:
+every demo program, and (optionally)  and the demos for you:
 
 ```bash
 ./build.sh              # build everything (binaries + .bin files)
-./build.sh --run-tests  # build, then run all 3 test suites
 ./build.sh --run-demos  # build, then run all 4 demo programs
-./build.sh --all        # build + run tests + run demos
+./build.sh --all        # build  + run demos
 ./build.sh --clean      # remove every artefact the script produces
 ./build.sh --help       # show the inline help
 ```
@@ -52,16 +50,13 @@ every demo program, and (optionally) runs the tests and the demos for you:
 After `./build.sh` finishes you have:
 
 * `./assembler_bin`, `./run_emulator`
-* `./tests/test_runner`, `./tests/test_integration`, `./tests/test_e2e`
 * `./timer.bin`, `./hello.bin`, `./fib.bin`, `./factorial.bin`
 
 …so any of the demos can be run immediately with e.g.
 `./run_emulator timer.bin`.
 
 The script aborts on the first compile error (`set -euo pipefail`) so build
-failures are obvious. Test failures during `--run-tests` / `--all` are
-tolerated and reported per suite — `test_e2e` is known to fail 6/15 on a
-fresh build (see §7).
+failures are obvious.
 
 ### 2.2 Building manually (what the script does under the hood)
 
@@ -83,25 +78,13 @@ g++ -std=c++17 -Wall -Wextra -I. -I./assembler -I./emulator -I./isa \
     emulator/control_unit.cpp emulator/Memory.cpp emulator/register.cpp \
     -o run_emulator
 
-# 3. Test suites
-g++ -std=c++17 -Wall -Wextra -I. -I./assembler -I./emulator -I./isa \
-    tests/test_runner.cpp emulator/register.cpp \
-    -o tests/test_runner
 
-g++ -std=c++17 -Wall -Wextra -I. -I./assembler -I./emulator -I./isa \
-    tests/test_integration.cpp assembler/assembler.cpp \
-    emulator/Memory.cpp emulator/register.cpp emulator/control_unit.cpp \
-    -o tests/test_integration
 
-g++ -std=c++17 -Wall -Wextra -I. -I./assembler -I./emulator -I./isa \
-    tests/test_e2e.cpp assembler/assembler.cpp \
-    emulator/Memory.cpp emulator/register.cpp emulator/control_unit.cpp \
-    -o tests/test_e2e
 ```
 
 `make clean` deletes `./assembler_bin` **and every `*.bin` in the project
 root**, including the convenience-shipped `factorial.bin`. The script's
-`--clean` does the same, plus removes the test binaries. To regenerate
+`--clean` does the same. To regenerate
 `factorial.bin` after a clean:
 
 ```bash
@@ -206,26 +189,5 @@ It prints `n! = …` for `n = 0..10`.
 
 ---
 
-## 7. Running the test suites
 
-```bash
-./tests/test_runner          # ALU + register file + ISA encode/decode unit tests
-./tests/test_integration     # Memory bank + cache integration tests
-./tests/test_e2e             # End-to-end (assembler → emulator) tests
-```
 
-Status against the **prebuilt** binaries shipped in this repo:
-
-| Suite                  | Result          |
-|------------------------|-----------------|
-| `test_runner`          | 119 / 119 PASS  |
-| `test_integration`     | 114 / 114 PASS  |
-| `test_e2e` (prebuilt)  | 16 / 16 PASS    |
-
-Status when **rebuilt from current sources** with the build commands in §2:
-
-| Suite                  | Result          |
-|------------------------|-----------------|
-| `test_runner`          | 119 / 119 PASS  |
-| `test_integration`     | 114 / 114 PASS  |
-| `test_e2e` (rebuilt)   | 9 PASS / 6 FAIL |
