@@ -10,8 +10,7 @@ Everything is plain C++17. No external dependencies. Builds and runs on macOS
 
 # Running instructions — 16-bit Harvard CPU project
 
-Everything you need to **build and run ** the project. For the project
-description, CPU schematic, ISA reference and walk-throughs see `README.md`.
+Everything you need to **build and run ** the project.
 
 The flow is always:
 
